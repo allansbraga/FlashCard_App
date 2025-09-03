@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if flashcard %}
+        Edit Flashcard - FlashCard App
+    {% else %}
+        Add Flashcard - FlashCard App
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2 class="h4 mb-0">
+            {% if flashcard %}
+                Edit Flashcard
+            {% else %}
+                Add Flashcard
+            {% endif %}
+        </h2>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="category_id" class="form-label">Category</label>
+                <select class="form-select" id="category_id" name="category_id">
+                    <option value="">-- Uncategorized --</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if flashcard and flashcard.category_id == category.id %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="front_content" class="form-label">Front Content</label>
+                <textarea class="form-control" id="front_content" name="front_content" rows="3" required>{{ flashcard.front_content if flashcard else '' }}</textarea>
+                <div class="form-text">This is what you'll see first when reviewing the flashcard.</div>
+            </div>
+            <div class="mb-3">
+                <label for="back_content" class="form-label">Back Content</label>
+                <textarea class="form-control" id="back_content" name="back_content" rows="3" required>{{ flashcard.back_content if flashcard else '' }}</textarea>
+                <div class="form-text">This is the answer or information revealed when you flip the card.</div>
+            </div>
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('list_flashcards') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    {% if flashcard %}
+                        Update Flashcard
+                    {% else %}
+                        Add Flashcard
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

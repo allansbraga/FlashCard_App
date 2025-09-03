@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - FlashCard App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h2 class="h4 mb-0">Welcome to FlashCard App</h2>
+            </div>
+            <div class="card-body">
+                <p class="lead">Create and study flashcards to memorize languages, facts, and more!</p>
+                <p>Get started by creating categories and flashcards, then use the review system to practice.</p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                    <a href="{{ url_for('add_flashcard') }}" class="btn btn-primary">Create Flashcard</a>
+                    <a href="{{ url_for('review') }}" class="btn btn-success">Start Review</a>
+                </div>
+            </div>
+        </div>
+
+        {% if recent_flashcards %}
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h3 class="h5 mb-0">Recent Flashcards</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for card in recent_flashcards %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ card.front_content }}</h5>
+                            <small>{{ card.category_name or 'Uncategorized' }}</small>
+                        </div>
+                        <p class="mb-1">{{ card.back_content }}</p>
+                        <small>Created: {{ card.created_at }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h3 class="h5 mb-0">Categories</h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for category in categories %}
+                    <a href="{{ url_for('list_flashcards', category_id=category.id) }}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ category.name }}</h5>
+                        </div>
+                        <p class="mb-1">{{ category.description }}</p>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('add_category') }}" class="btn btn-sm btn-primary">Add Category</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="h5 mb-0">Quick Tips</h3>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>Create categories to organize your flashcards</li>
+                    <li>Review regularly for better retention</li>
+                    <li>Rate your performance to optimize learning</li>
+                    <li>Use images and mnemonics for better memory</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

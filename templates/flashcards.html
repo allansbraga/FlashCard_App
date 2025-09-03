@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Flashcards - FlashCard App{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2>
+            {% if selected_category %}
+                Flashcards in {{ selected_category.name }}
+            {% else %}
+                All Flashcards
+            {% endif %}
+        </h2>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('add_flashcard') }}" class="btn btn-primary">Add Flashcard</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h3 class="h5 mb-0">Filter by Category</h3>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ url_for('list_flashcards') }}" class="btn btn-sm {% if not selected_category %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        All Categories
+                    </a>
+                    {% for category in categories %}
+                    <a href="{{ url_for('list_flashcards', category_id=category.id) }}" 
+                       class="btn btn-sm {% if selected_category and selected_category.id == category.id %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if flashcards %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for card in flashcards %}
+    <div class="col">
+        <div class="card h-100 flashcard">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="badge bg-{% if card.category_name %}info{% else %}secondary{% endif %}">
+                    {{ card.category_name or 'Uncategorized' }}
+                </span>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Actions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('edit_flashcard', flashcard_id=card.id) }}">Edit</a></li>
+                        <li>
+                            <button class="dropdown-item text-danger" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteFlashcardModal" 
+                                    data-flashcard-id="{{ card.id }}">
+                                Delete
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body flashcard-content" data-id="{{ card.id }}">
+                <div class="flashcard-front">
+                    <h5 class="card-title">{{ card.front_content }}</h5>
+                </div>
+                <div class="flashcard-back d-none">
+                    <p class="card-text">{{ card.back_content }}</p>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <small class="text-muted">Created: {{ card.created_at[:10] }}</small>
+                <button class="btn btn-sm btn-outline-primary flip-btn">Flip</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    {% if selected_category %}
+        No flashcards found in this category. 
+        <a href="{{ url_for('add_flashcard') }}" class="alert-link">Create your first flashcard</a> in this category!
+    {% else %}
+        No flashcards found. 
+        <a href="{{ url_for('add_flashcard') }}" class="alert-link">Create your first flashcard</a> to get started!
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteFlashcardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this flashcard?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteFlashcardForm" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Flashcard flip functionality
+        document.querySelectorAll('.flip-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const card = this.closest('.flashcard').querySelector('.flashcard-content');
+                const front = card.querySelector('.flashcard-front');
+                const back = card.querySelector('.flashcard-back');
+                
+                if (front.classList.contains('d-none')) {
+                    front.classList.remove('d-none');
+                    back.classList.add('d-none');
+                    this.textContent = 'Flip';
+                } else {
+                    front.classList.add('d-none');
+                    back.classList.remove('d-none');
+                    this.textContent = 'Back';
+                }
+            });
+        });
+        
+        // Delete modal functionality
+        const deleteModal = document.getElementById('deleteFlashcardModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const flashcardId = button.getAttribute('data-flashcard-id');
+                
+                document.getElementById('deleteFlashcardForm').action = 
+                    "{{ url_for('delete_flashcard', flashcard_id=0) }}".replace('0', flashcardId);
+            });
+        }
+    });
+</script>
+{% endblock %}
