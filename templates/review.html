@@ -31,6 +31,9 @@
             <div id="cardBack" class="review-card-content d-none">
                 <h3 class="card-title text-center mb-4">Answer</h3>
                 <p id="backContent" class="lead text-center"></p>
+                <div class="mt-3 text-center text-muted small">
+                    <span id="srsInfo"></span>
+                </div>
             </div>
         </div>
         <div class="card-footer text-center">
@@ -74,7 +77,10 @@
             "id": {{ card.id|tojson }},
             "front": {{ card.front_content|tojson }},
             "back": {{ card.back_content|tojson }},
-            "category": {{ (card.category_name or 'Uncategorized')|tojson }}
+            "category": {{ (card.category_name or 'Uncategorized')|tojson }},
+            "ease_factor": {{ (card.ease_factor or 2.5)|tojson }},
+            "interval_days": {{ (card.interval_days or 1)|tojson }},
+            "next_review_at": {{ (card.next_review_at or '')|tojson }}
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
@@ -151,6 +157,9 @@
             backContent.textContent = card.back;
             currentCardNumber.textContent = `Card ${index + 1} of ${totalCards}`;
             currentCategory.textContent = card.category;
+            const srsInfo = document.getElementById('srsInfo');
+            const nextLabel = card.next_review_at ? new Date(card.next_review_at).toLocaleString() : 'unscheduled';
+            srsInfo.textContent = `EF: ${Number(card.ease_factor).toFixed(2)} · Interval: ${card.interval_days}d · Next: ${nextLabel}`;
             
             // Reset card state
             cardFront.classList.remove('d-none');

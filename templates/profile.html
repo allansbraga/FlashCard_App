@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}Perfil - FlashCard App{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-5">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">Perfil</div>
+      <div class="card-body">
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Idioma nativo:</strong> {{ user.native_language or '—' }}</p>
+        <p><strong>Criado em:</strong> {{ user.created_at }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">Progresso</div>
+      <div class="card-body">
+        {% if progress %}
+        <ul class="list-group">
+          {% for p in progress %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ p['skill'] }}
+            <span class="badge bg-info">{{ '%.2f'|format(p['score']) }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Sem registros de progresso.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

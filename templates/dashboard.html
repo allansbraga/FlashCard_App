@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - FlashCard App{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-4">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white">Resumo</div>
+      <div class="card-body">
+        <p><strong>Total de Flashcards:</strong> {{ total_cards }}</p>
+        <p><strong>Reviews últimos 7 dias:</strong> {{ reviews_7d }}</p>
+        <p><strong>Média de desempenho:</strong> {{ avg_rating if avg_rating is not none else 'N/A' }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-header bg-secondary text-white">Por Categoria</div>
+      <div class="card-body">
+        {% if per_category %}
+        <ul class="list-group">
+          {% for row in per_category %}
+          {% set cat = categories|selectattr('id', 'equalto', row['category_id'])|list %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ (cat[0].name if cat and cat[0] else 'Uncategorized') }}
+            <span class="badge bg-info">{{ row['cnt'] }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-muted">Sem dados por categoria.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

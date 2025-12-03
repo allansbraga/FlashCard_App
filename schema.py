@@ -18,7 +18,8 @@ def create_tables():
     CREATE TABLE IF NOT EXISTS categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
-        description TEXT
+        description TEXT,
+        user_id INTEGER
     )
     ''')
     
@@ -47,6 +48,46 @@ def create_tables():
         FOREIGN KEY (flashcard_id) REFERENCES flashcards (id)
     )
     ''')
+
+    # Add SRS columns to flashcards if they do not exist
+    def column_exists(table_name, column_name):
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        return any(row[1] == column_name for row in cursor.fetchall())
+
+    if not column_exists('flashcards', 'ease_factor'):
+        cursor.execute("ALTER TABLE flashcards ADD COLUMN ease_factor REAL DEFAULT 2.5")
+    if not column_exists('flashcards', 'interval_days'):
+        cursor.execute("ALTER TABLE flashcards ADD COLUMN interval_days INTEGER DEFAULT 1")
+    if not column_exists('flashcards', 'next_review_at'):
+        cursor.execute("ALTER TABLE flashcards ADD COLUMN next_review_at TIMESTAMP")
+
+    # Create users table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        native_language TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # Create student progress table
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS student_progress (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        skill TEXT NOT NULL,
+        score REAL DEFAULT 0,
+        last_session TIMESTAMP,
+        streak_days INTEGER DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+
+    # Add user_id to flashcards for multi-tenant support
+    if not column_exists('flashcards', 'user_id'):
+        cursor.execute("ALTER TABLE flashcards ADD COLUMN user_id INTEGER")
     
     # Commit changes and close connection
     conn.commit()

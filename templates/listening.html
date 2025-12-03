@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Listening - FlashCard App{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header bg-info text-white">Listening</div>
+  <div class="card-body">
+    <p>Escolha um exercício simples e responda. Pontos e streak são calculados.</p>
+    <div class="mb-3">
+      <label class="form-label">Complete a frase</label>
+      <div class="input-group">
+        <span class="input-group-text">Eu</span>
+        <input id="listeningInput" type="text" class="form-control" placeholder="sou">
+        <span class="input-group-text">brasileiro</span>
+      </div>
+      <button id="submitListening" class="btn btn-primary mt-2">Enviar</button>
+      <span id="listeningFeedback" class="ms-2"></span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('submitListening').addEventListener('click', function() {
+  const val = document.getElementById('listeningInput').value.trim().toLowerCase();
+  const correct = val === 'sou' ? 1 : 0;
+  fetch('{{ url_for("listening_submit") }}', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'correct='+correct})
+    .then(r=>r.json()).then(_=>{
+      document.getElementById('listeningFeedback').textContent = correct ? 'Correto!' : 'Tente novamente';
+    });
+});
+</script>
+{% endblock %}

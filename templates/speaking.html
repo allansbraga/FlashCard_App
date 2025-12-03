@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Speaking - FlashCard App{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header bg-success text-white">Speaking</div>
+  <div class="card-body">
+    <p>Pratique repetindo a frase exibida e avalie sua qualidade.</p>
+    <p class="lead">Say: Hello, how are you?</p>
+    <div class="d-flex align-items-center">
+      <label class="me-2">Qualidade percebida (1-20):</label>
+      <input id="quality" type="number" min="1" max="20" class="form-control" style="max-width:120px" value="10">
+      <button id="speakingSubmit" class="btn btn-success ms-2">Registrar</button>
+    </div>
+    <div id="speakingResult" class="mt-2"></div>
+  </div>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('speakingSubmit').addEventListener('click', function(){
+  const q = document.getElementById('quality').value;
+  fetch('{{ url_for("speaking_submit") }}', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'quality='+q})
+    .then(r=>r.json()).then(_=>{
+      document.getElementById('speakingResult').textContent = 'Registrado!';
+    });
+});
+</script>
+{% endblock %}
