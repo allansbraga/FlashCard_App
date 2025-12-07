@@ -406,3 +406,27 @@ class StudentProgress:
             cur.execute("INSERT INTO student_progress (user_id, skill, score, last_session, streak_days) VALUES (?, ?, ?, datetime('now'), 1)", (user_id, skill, delta_score))
         conn.commit()
         self.db_manager.close_connection(conn)
+
+    def get_difficulty(self, user_id, skill):
+        conn = self.db_manager.get_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT difficulty FROM user_skill_levels WHERE user_id = ? AND skill = ?', (user_id, skill))
+        row = cur.fetchone()
+        diff = row['difficulty'] if row else 50
+        self.db_manager.close_connection(conn)
+        return diff
+
+    def adjust_difficulty(self, user_id, skill, increase):
+        conn = self.db_manager.get_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT id, difficulty FROM user_skill_levels WHERE user_id = ? AND skill = ?', (user_id, skill))
+        row = cur.fetchone()
+        if row:
+            current = row['difficulty'] if isinstance(row, sqlite3.Row) else row[1]
+            new = int(round(current * (1.1 if increase else 0.85)))
+            new = max(1, min(100, new))
+            cur.execute('UPDATE user_skill_levels SET difficulty = ? WHERE id = ?', (new, row['id'] if isinstance(row, sqlite3.Row) else row[0]))
+        else:
+            cur.execute('INSERT INTO user_skill_levels (user_id, skill, difficulty) VALUES (?, ?, ?)', (user_id, skill, 55 if increase else 45))
+        conn.commit()
+        self.db_manager.close_connection(conn)

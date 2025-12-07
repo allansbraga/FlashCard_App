@@ -14,7 +14,8 @@
 <script>
 document.getElementById('writingSubmit').addEventListener('click', function(){
   const text = document.getElementById('writingText').value;
-  fetch('{{ url_for("writing_check") }}', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'text='+encodeURIComponent(text)})
+  const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  fetch('{{ url_for("writing_check") }}', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'text='+encodeURIComponent(text)+'&csrf_token='+encodeURIComponent(token)})
     .then(r=>r.json()).then(data=>{
       document.getElementById('writingResult').textContent = 'Score: '+data.score+' | Erros: '+data.errors;
     });

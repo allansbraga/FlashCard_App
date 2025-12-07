@@ -4,6 +4,9 @@ import datetime
 from schema import initialize_database, DATABASE_PATH
 from models import Category, Flashcard, User, StudentProgress
 import sqlite3
+import secrets
+import json
+import urllib.request, urllib.parse
 
 # Initialize the database
 initialize_database()
@@ -15,7 +18,12 @@ app.secret_key = os.urandom(24)  # For flash messages and sessions
 # Context processor to add variables to all templates
 @app.context_processor
 def inject_now():
-    return {'now': datetime.datetime.now()}
+    return {'now': datetime.datetime.now(), 'csrf_token': session.get('csrf_token')}
+
+@app.before_request
+def ensure_csrf():
+    if not session.get('csrf_token'):
+        session['csrf_token'] = secrets.token_hex(16)
 
 # Initialize models
 category_model = Category()
@@ -347,15 +355,20 @@ def get_flashcard(flashcard_id):
 # Listening
 @app.route('/listening')
 def listening():
-    return render_template('listening.html')
+    uid = session.get('user_id')
+    diff = progress_model.get_difficulty(uid, 'Listening') if uid else 50
+    return render_template('listening.html', difficulty=diff)
 
 @app.route('/api/listening/submit', methods=['POST'])
 def listening_submit():
     uid = session.get('user_id')
+    if request.form.get('csrf_token') != session.get('csrf_token'):
+        return jsonify({'success': False, 'error': 'Invalid CSRF token'})
     correct = request.form.get('correct', type=int)
     delta = 10 if correct else 2
     if uid:
         progress_model.update_progress(uid, 'Listening', delta)
+        progress_model.adjust_difficulty(uid, 'Listening', bool(correct))
     return jsonify({'success': True})
 
 # Writing
@@ -365,10 +378,23 @@ def writing():
 
 @app.route('/api/writing/check', methods=['POST'])
 def writing_check():
+    if request.form.get('csrf_token') != session.get('csrf_token'):
+        return jsonify({'success': False, 'error': 'Invalid CSRF token'})
     text = request.form.get('text', '')
     uid = session.get('user_id')
     errors = 0
-    score = max(0, 100 - min(len(text)//5, 100))
+    score = 0
+    try:
+        payload = urllib.parse.urlencode({'text': text, 'language': 'en-US'}).encode()
+        req = urllib.request.Request('https://api.languagetool.org/v2/check', data=payload)
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+            matches = data.get('matches', [])
+            errors = len(matches)
+            score = max(0, 100 - errors * 5)
+    except Exception:
+        errors = min(len(text)//5, 100)
+        score = max(0, 100 - errors)
     if uid:
         progress_model.update_progress(uid, 'Writing', score/10)
     return jsonify({'success': True, 'score': score, 'errors': errors})
@@ -381,6 +407,8 @@ def speaking():
 @app.route('/api/speaking/submit', methods=['POST'])
 def speaking_submit():
     uid = session.get('user_id')
+    if request.form.get('csrf_token') != session.get('csrf_token'):
+        return jsonify({'success': False, 'error': 'Invalid CSRF token'})
     quality = request.form.get('quality', type=int)
     delta = max(1, min(20, quality or 10))
     if uid:

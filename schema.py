@@ -88,6 +88,18 @@ def create_tables():
     # Add user_id to flashcards for multi-tenant support
     if not column_exists('flashcards', 'user_id'):
         cursor.execute("ALTER TABLE flashcards ADD COLUMN user_id INTEGER")
+
+    # Create user skill levels for adaptive difficulty
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS user_skill_levels (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        skill TEXT NOT NULL,
+        difficulty INTEGER DEFAULT 50,
+        UNIQUE(user_id, skill),
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
     
     # Commit changes and close connection
     conn.commit()

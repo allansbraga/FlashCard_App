@@ -15,6 +15,7 @@
       <button id="submitListening" class="btn btn-primary mt-2">Enviar</button>
       <span id="listeningFeedback" class="ms-2"></span>
     </div>
+    <p class="text-muted">Dificuldade atual: {{ difficulty }}%</p>
   </div>
 </div>
 {% endblock %}
@@ -23,7 +24,8 @@
 document.getElementById('submitListening').addEventListener('click', function() {
   const val = document.getElementById('listeningInput').value.trim().toLowerCase();
   const correct = val === 'sou' ? 1 : 0;
-  fetch('{{ url_for("listening_submit") }}', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'correct='+correct})
+  const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  fetch('{{ url_for("listening_submit") }}', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'correct='+correct+'&csrf_token='+encodeURIComponent(token)})
     .then(r=>r.json()).then(_=>{
       document.getElementById('listeningFeedback').textContent = correct ? 'Correto!' : 'Tente novamente';
     });
